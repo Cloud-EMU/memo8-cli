@@ -9,3 +9,5 @@ gen
 
 publish.sh
 memo*.tgz
+
+dist/
