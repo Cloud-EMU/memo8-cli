@@ -22,7 +22,7 @@ export function createProgram(): Command {
   program
     .name('memo8')
     .description('memo8 CLI - AI-powered developer productivity tool')
-    .version('1.0.2');
+    .version('1.0.4');
 
   registerAuthCommands(program);
   registerInitCommand(program);

@@ -12,10 +12,10 @@
     "memo8": "./dist/bin/memo8.js"
   },
   "scripts": {
-    "build": "tsc",
-    "build:dev": "node scripts/set-env.js dev && tsc",
-    "build:staging": "node scripts/set-env.js staging && tsc",
-    "build:prod": "node scripts/set-env.js prod && tsc",
+    "build": "tsc && chmod +x dist/bin/memo8.js",
+    "build:dev": "node scripts/set-env.js dev && tsc && chmod +x dist/bin/memo8.js",
+    "build:staging": "node scripts/set-env.js staging && tsc && chmod +x dist/bin/memo8.js",
+    "build:prod": "node scripts/set-env.js prod && tsc && chmod +x dist/bin/memo8.js",
     "prepack": "node scripts/set-env.js ${MEMO8_ENV:-prod} && tsc",
     "dev": "tsx src/bin/memo8.ts",
     "start": "node dist/bin/memo8.js",
