@@ -5,10 +5,7 @@ AI-powered developer productivity tool. memo8 acts as a "second brain" for your 
 ## Installation
 
 ```bash
-cd cli
-npm install
-npm run build
-npm link    # makes 'memo8' available globally
+npm install -g @memo8/cli
 ```
 
 ## Getting Started
