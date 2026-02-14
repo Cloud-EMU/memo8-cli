@@ -74,10 +74,24 @@ export function getProjectId(): number | null {
   return local.projectId || null;
 }
 
-export function setAuth(token: string, user: User): void {
+export function getTeamId(): number | null {
+  const config = loadGlobalConfig();
+  return config.teamId || null;
+}
+
+export function setTeamId(teamId: number): void {
+  const config = loadGlobalConfig();
+  config.teamId = teamId;
+  saveGlobalConfig(config);
+}
+
+export function setAuth(token: string, user: User, teamId?: number): void {
   const config = loadGlobalConfig();
   config.token = token;
   config.user = user;
+  if (teamId) {
+    config.teamId = teamId;
+  }
   saveGlobalConfig(config);
 }
 
@@ -85,5 +99,6 @@ export function clearAuth(): void {
   const config = loadGlobalConfig();
   delete config.token;
   delete config.user;
+  delete config.teamId;
   saveGlobalConfig(config);
 }

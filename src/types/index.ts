@@ -6,10 +6,25 @@ export interface User {
   email: string;
 }
 
+export interface Team {
+  id: number;
+  name: string;
+  isPersonal: boolean;
+  role: 'owner' | 'admin' | 'member';
+}
+
+export interface TeamMember {
+  id: number;
+  name: string;
+  email: string;
+  role: 'owner' | 'admin' | 'member';
+}
+
 export interface AuthData {
   user: User;
   token: string;
   tokenType: string;
+  currentTeamId: number | null;
 }
 
 export interface Project {
@@ -108,6 +123,7 @@ export interface GlobalConfig {
   apiUrl?: string;
   token?: string;
   user?: User;
+  teamId?: number;
 }
 
 export interface LocalConfig {

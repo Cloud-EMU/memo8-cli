@@ -1,6 +1,6 @@
 {
   "name": "@memo8/memo8",
-  "version": "1.0.4",
+  "version": "1.0.5-alpha.1",
   "license": "MIT",
   "description": "memo8 CLI - AI-powered developer productivity tool",
   "type": "module",

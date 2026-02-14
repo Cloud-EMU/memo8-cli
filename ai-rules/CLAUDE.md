@@ -1,18 +1,46 @@
-# memo8 - Developer Knowledge Base
+# ⚠️ MANDATORY WORKFLOW — YOU MUST FOLLOW THESE RULES
+
+These rules are NOT suggestions. They are REQUIRED for every task in this project. Violating them creates knowledge gaps and duplicated work.
+
+## Rule 1: Run memo8 BEFORE Writing Any Code
+
+You MUST run these commands BEFORE reading source files or writing code:
+
+```bash
+memo8 context                          # Get project context (or: memo8 context --task <id>)
+memo8 memory search "<keywords>"       # Check existing knowledge
+memo8 convention list                  # Review coding standards
+```
+
+The project has existing conventions, decisions, and past learnings that constrain your work. Skipping this causes you to violate established patterns.
+
+## Rule 2: Track ALL Work with memo8 Tasks
+
+- Create tasks: `memo8 task create --title "..." --description "..."`
+- Start work: `memo8 task start <id>`
+- Finish work: `memo8 task done <id>`
+
+NEVER use built-in task tools (TaskCreate, TodoWrite, internal todo lists). ALL task management MUST go through the `memo8` CLI.
+
+## Rule 3: Save What You Learn
+
+After completing a task, save insights:
+
+```bash
+memo8 memory add --title "..." --content "..." --type note --tags "1,2"
+```
+
+Save: gotchas, non-obvious behaviors, architectural insights, debugging fixes, config discoveries.
+
+## Rule 4: Non-Interactive Mode Only
+
+All memo8 create/add commands MUST use CLI flags. Never use interactive prompts.
+
+<!-- memo8-reference-start -->
+
+# memo8 CLI Reference
 
 memo8 is a CLI-based "second brain" for your project. It centralizes tasks, memories, conventions, decisions, code snippets, codebase index, and tech stack — all queryable via `memo8` commands.
-
-**IMPORTANT**: All create/add commands support non-interactive mode via flags. Always use flags instead of non-interactive mode.
-
-## Critical Rules
-
-1. **Always start with memo8 CLI** — Before reading any source file or writing code, run:
-  - `memo8 context` (or `memo8 context --task <id>`) to gather project context
-  - `memo8 memory search "<keywords>"` to check existing knowledge
-  - `memo8 convention list` to review coding standards
-2. **Track all work with memo8 tasks** — Use `memo8 task create`, `memo8 task start/done`. Never use internal TaskCreate/TodoWrite tools.
-3. **Save learnings to memo8** — After completing work, use `memo8 memory add` for any new insights.
----
 
 ## AI Workflow: Task Lifecycle
 

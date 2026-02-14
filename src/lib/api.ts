@@ -1,5 +1,5 @@
 import axios, { type AxiosInstance, type AxiosResponse } from 'axios';
-import { getToken, getApiUrl, clearAuth } from './config.js';
+import { getToken, getApiUrl, getTeamId, clearAuth } from './config.js';
 
 export class ApiError extends Error {
   status: number;
@@ -45,6 +45,10 @@ export function createApiClient(): ApiClient {
     const token = getToken();
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
+    }
+    const teamId = getTeamId();
+    if (teamId) {
+      config.headers['X-Team-Id'] = String(teamId);
     }
     return config;
   });

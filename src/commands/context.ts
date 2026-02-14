@@ -71,7 +71,11 @@ export function registerContextCommands(program: Command): void {
         if (!opts.topic) {
           const helper = readHelperFile('CLAUDE.md');
           if (helper) {
-            console.log(helper);
+            // Remove internal markers from stdout output
+            const cleanHelper = helper
+              .replace('<!-- memo8-reference-start -->', '')
+              .trim();
+            console.log(cleanHelper);
             console.log('\n## Live Project Data\n');
           }
         }
@@ -117,13 +121,13 @@ export function registerContextCommands(program: Command): void {
 
         const helper = readHelperFile('cursor-rules.md');
         const contextBlock = data.data.context;
+
+        // Remove the reference marker from output — cursor gets the full file
+        const referenceMarker = '<!-- memo8-reference-start -->';
+        const cleanHelper = helper.replace(referenceMarker, '');
+
         const mdcContent = [
-          '---',
-          'description: "memo8 project context - conventions, tech stack, decisions"',
-          'alwaysApply: true',
-          '---',
-          '',
-          helper,
+          cleanHelper.trim(),
           '',
           '## Live Project Data',
           '',
@@ -170,32 +174,65 @@ export function registerContextCommands(program: Command): void {
         const contextBlock = data.data.context;
         const marker = '<!-- memo8-context-start -->';
         const endMarker = '<!-- memo8-context-end -->';
+        const mandatoryMarker = '<!-- memo8-mandatory-start -->';
+        const mandatoryEndMarker = '<!-- memo8-mandatory-end -->';
+        const referenceMarker = '<!-- memo8-reference-start -->';
+
+        // Split template: mandatory rules go OUTSIDE context markers,
+        // reference docs go INSIDE (so AI agents don't treat rules as auto-generated)
+        const refIdx = helper.indexOf(referenceMarker);
+        let mandatorySection = '';
+        let referenceSection = helper;
+
+        if (refIdx !== -1) {
+          mandatorySection = helper.substring(0, refIdx).trim();
+          referenceSection = helper.substring(refIdx + referenceMarker.length).trim();
+        }
+
         const liveData = contextBlock ? `\n## Live Project Data\n\n${contextBlock}` : '';
-        const wrappedContext = `${marker}\n${helper}${liveData}\n${endMarker}`;
+        const wrappedContext = `${marker}\n${referenceSection}${liveData}\n${endMarker}`;
+        const mandatoryBlock = mandatorySection
+          ? `${mandatoryMarker}\n${mandatorySection}\n${mandatoryEndMarker}`
+          : '';
 
         if (fs.existsSync(claudeMdPath)) {
           let existing = fs.readFileSync(claudeMdPath, 'utf-8');
 
-          // Check if there is already a memo8 context block
+          // Update mandatory block
+          const mStartIdx = existing.indexOf(mandatoryMarker);
+          const mEndIdx = existing.indexOf(mandatoryEndMarker);
+
+          if (mStartIdx !== -1 && mEndIdx !== -1) {
+            existing =
+              existing.substring(0, mStartIdx) +
+              mandatoryBlock +
+              existing.substring(mEndIdx + mandatoryEndMarker.length);
+          }
+
+          // Update context block
           const startIdx = existing.indexOf(marker);
           const endIdx = existing.indexOf(endMarker);
 
           if (startIdx !== -1 && endIdx !== -1) {
-            // Replace existing block
             existing =
               existing.substring(0, startIdx) +
               wrappedContext +
               existing.substring(endIdx + endMarker.length);
-          } else {
-            // Append to file
+          } else if (mStartIdx !== -1) {
+            // Has mandatory block but no context block — append after mandatory
             existing = existing.trimEnd() + '\n\n' + wrappedContext + '\n';
+          } else {
+            // No blocks at all — append both
+            existing = existing.trimEnd() + '\n\n' + mandatoryBlock + '\n\n' + wrappedContext + '\n';
           }
 
           fs.writeFileSync(claudeMdPath, existing);
           success('Updated .claude/CLAUDE.md with latest project context.');
         } else {
-          // Create new file
-          const content = `# Project Context\n\n${wrappedContext}\n`;
+          // Create new file with mandatory rules outside context block
+          const content = mandatoryBlock
+            ? `# Project Context\n\n${mandatoryBlock}\n\n${wrappedContext}\n`
+            : `# Project Context\n\n${wrappedContext}\n`;
           fs.writeFileSync(claudeMdPath, content);
           success('Created .claude/CLAUDE.md with project context.');
         }
@@ -230,27 +267,56 @@ export function registerContextCommands(program: Command): void {
         const contextBlock = data.data.context;
         const marker = '<!-- memo8-context-start -->';
         const endMarker = '<!-- memo8-context-end -->';
+        const mandatoryMarker = '<!-- memo8-mandatory-start -->';
+        const mandatoryEndMarker = '<!-- memo8-mandatory-end -->';
+        const referenceMarker = '<!-- memo8-reference-start -->';
+
+        const refIdx = helper.indexOf(referenceMarker);
+        let mandatorySection = '';
+        let referenceSection = helper;
+
+        if (refIdx !== -1) {
+          mandatorySection = helper.substring(0, refIdx).trim();
+          referenceSection = helper.substring(refIdx + referenceMarker.length).trim();
+        }
+
         const liveData = contextBlock ? `\n## Live Project Data\n\n${contextBlock}` : '';
-        const wrappedContext = `${marker}\n${helper}${liveData}\n${endMarker}`;
+        const wrappedContext = `${marker}\n${referenceSection}${liveData}\n${endMarker}`;
+        const mandatoryBlock = mandatorySection
+          ? `${mandatoryMarker}\n${mandatorySection}\n${mandatoryEndMarker}`
+          : '';
 
         if (fs.existsSync(agentsMdPath)) {
           let existing = fs.readFileSync(agentsMdPath, 'utf-8');
+
+          const mStartIdx = existing.indexOf(mandatoryMarker);
+          const mEndIdx = existing.indexOf(mandatoryEndMarker);
+          if (mStartIdx !== -1 && mEndIdx !== -1) {
+            existing =
+              existing.substring(0, mStartIdx) +
+              mandatoryBlock +
+              existing.substring(mEndIdx + mandatoryEndMarker.length);
+          }
+
           const startIdx = existing.indexOf(marker);
           const endIdx = existing.indexOf(endMarker);
-
           if (startIdx !== -1 && endIdx !== -1) {
             existing =
               existing.substring(0, startIdx) +
               wrappedContext +
               existing.substring(endIdx + endMarker.length);
-          } else {
+          } else if (mStartIdx !== -1) {
             existing = existing.trimEnd() + '\n\n' + wrappedContext + '\n';
+          } else {
+            existing = existing.trimEnd() + '\n\n' + mandatoryBlock + '\n\n' + wrappedContext + '\n';
           }
 
           fs.writeFileSync(agentsMdPath, existing);
           success('Updated AGENTS.md with latest project context.');
         } else {
-          const content = `# Project Context\n\n${wrappedContext}\n`;
+          const content = mandatoryBlock
+            ? `# Project Context\n\n${mandatoryBlock}\n\n${wrappedContext}\n`
+            : `# Project Context\n\n${wrappedContext}\n`;
           fs.writeFileSync(agentsMdPath, content);
           success('Created AGENTS.md with project context.');
         }
@@ -291,27 +357,56 @@ export function registerContextCommands(program: Command): void {
         const contextBlock = data.data.context;
         const marker = '<!-- memo8-context-start -->';
         const endMarker = '<!-- memo8-context-end -->';
+        const mandatoryMarker = '<!-- memo8-mandatory-start -->';
+        const mandatoryEndMarker = '<!-- memo8-mandatory-end -->';
+        const referenceMarker = '<!-- memo8-reference-start -->';
+
+        const refIdx = helper.indexOf(referenceMarker);
+        let mandatorySection = '';
+        let referenceSection = helper;
+
+        if (refIdx !== -1) {
+          mandatorySection = helper.substring(0, refIdx).trim();
+          referenceSection = helper.substring(refIdx + referenceMarker.length).trim();
+        }
+
         const liveData = contextBlock ? `\n## Live Project Data\n\n${contextBlock}` : '';
-        const wrappedContext = `${marker}\n${helper}${liveData}\n${endMarker}`;
+        const wrappedContext = `${marker}\n${referenceSection}${liveData}\n${endMarker}`;
+        const mandatoryBlock = mandatorySection
+          ? `${mandatoryMarker}\n${mandatorySection}\n${mandatoryEndMarker}`
+          : '';
 
         if (fs.existsSync(geminiMdPath)) {
           let existing = fs.readFileSync(geminiMdPath, 'utf-8');
+
+          const mStartIdx = existing.indexOf(mandatoryMarker);
+          const mEndIdx = existing.indexOf(mandatoryEndMarker);
+          if (mStartIdx !== -1 && mEndIdx !== -1) {
+            existing =
+              existing.substring(0, mStartIdx) +
+              mandatoryBlock +
+              existing.substring(mEndIdx + mandatoryEndMarker.length);
+          }
+
           const startIdx = existing.indexOf(marker);
           const endIdx = existing.indexOf(endMarker);
-
           if (startIdx !== -1 && endIdx !== -1) {
             existing =
               existing.substring(0, startIdx) +
               wrappedContext +
               existing.substring(endIdx + endMarker.length);
-          } else {
+          } else if (mStartIdx !== -1) {
             existing = existing.trimEnd() + '\n\n' + wrappedContext + '\n';
+          } else {
+            existing = existing.trimEnd() + '\n\n' + mandatoryBlock + '\n\n' + wrappedContext + '\n';
           }
 
           fs.writeFileSync(geminiMdPath, existing);
           success('Updated .gemini/GEMINI.md with latest project context.');
         } else {
-          const content = `# Project Context\n\n${wrappedContext}\n`;
+          const content = mandatoryBlock
+            ? `# Project Context\n\n${mandatoryBlock}\n\n${wrappedContext}\n`
+            : `# Project Context\n\n${wrappedContext}\n`;
           fs.writeFileSync(geminiMdPath, content);
           success('Created .gemini/GEMINI.md with project context.');
         }

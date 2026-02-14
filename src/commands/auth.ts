@@ -2,7 +2,7 @@ import { Command } from 'commander';
 import inquirer from 'inquirer';
 import ora from 'ora';
 import { createApiClient } from '../lib/api.js';
-import { setAuth, clearAuth, loadGlobalConfig } from '../lib/config.js';
+import { setAuth, clearAuth, loadGlobalConfig, setTeamId } from '../lib/config.js';
 import { success, error, info, handleError } from '../lib/output.js';
 import type { ApiResponse, AuthData, User } from '../types/index.js';
 
@@ -50,7 +50,7 @@ export function registerAuthCommands(program: Command): void {
           device_name: 'memo8-cli',
         });
 
-        setAuth(data.data.token, data.data.user);
+        setAuth(data.data.token, data.data.user, data.data.currentTeamId ?? undefined);
         spinner.stop();
         success(`Welcome back, ${data.data.user.name}!`);
       } catch (err) {
@@ -123,7 +123,7 @@ export function registerAuthCommands(program: Command): void {
           device_name: 'memo8-cli',
         });
 
-        setAuth(data.data.token, data.data.user);
+        setAuth(data.data.token, data.data.user, data.data.currentTeamId ?? undefined);
         spinner.stop();
         success(`Account created! Welcome, ${data.data.user.name}!`);
       } catch (err) {
@@ -168,7 +168,7 @@ export function registerAuthCommands(program: Command): void {
         const spinner = ora('Checking status...').start();
         const api = createApiClient();
 
-        const { data } = await api.get<User>('/user');
+        const { data } = await api.get<User & { currentTeamId: number | null; teams: Array<{ id: number; name: string; isPersonal: boolean; role: string }> }>('/user');
         spinner.stop();
 
         console.log();
@@ -176,6 +176,11 @@ export function registerAuthCommands(program: Command): void {
         console.log(`  Name:  ${data.name}`);
         console.log(`  Email: ${data.email}`);
         console.log(`  ID:    ${data.id}`);
+
+        const currentTeam = data.teams?.find(t => t.id === data.currentTeamId);
+        if (currentTeam) {
+          console.log(`  Team:  ${currentTeam.name}${currentTeam.isPersonal ? ' (Personal)' : ''}`);
+        }
         console.log();
       } catch (err) {
         error('Not authenticated or session expired. Run: memo8 login');
